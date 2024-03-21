@@ -1,0 +1,193 @@
+#!/bin/sh
+
+source "$HOME/.config/sketchybar/colors.sh"
+source "$HOME/.config/sketchybar/icons.sh"
+
+PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
+SPOTIFY_EVENT="com.spotify.client.PlaybackStateChanged"
+POPUP_CLICK_SCRIPT="sketchybar --set \$NAME popup.drawing=toggle"
+ACTIVE_SPACE=$(yabai -m query --spaces --space | jq '.index')
+
+bar=(
+  height=30
+  margin=5
+  corner_radius=10
+  position=top
+  color=$TRANSPARENT
+  border_color=$TEXT
+  y_offset=4
+  sticky=off
+)
+
+sketchybar --bar "${bar[@]}"
+
+defaults=(
+  updates=when_shown
+  icon.drawing=on
+  icon.font="SF Pro:Regular:12.0"
+  icon.color=$TEXT
+  label.font="SF Pro:Regular:12.0"
+  label.drawing=on
+  label.color=$TEXT
+  popup.background.color=$L_BROWN
+  popup.background.corner_radius=10
+  popup.background.border_width=3
+  popup.border_color=$M_BROWN
+  popup.blur_radius=100
+)
+
+sketchybar --default "${defaults[@]}"
+
+time=(
+  update_freq=1
+  script="$PLUGIN_DIR/time.sh"
+  label.font="SF Pro:Bold:12.0"
+  label.padding_left=15
+  label.padding_right=15
+  background.corner_radius=10
+  background.color=$M_BROWN
+  background.height=19
+  background.padding_left=-13
+  background.padding_right=3
+  background.border_color=$M_BROWN
+)
+
+sketchybar --add item time right \
+  --set time "${time[@]}" \
+  --subscribe time system_woke
+
+date=(
+  update_freq=30
+  script="$PLUGIN_DIR/date.sh"
+  label.padding_left=15
+  background.color=$M_BROWN
+  background.height=19
+  background.corner_radius=10
+)
+
+sketchybar --add item date right \
+  --set date "${date[@]}" \
+  --subscribe date system_woke
+
+wifi=(
+  script="$PLUGIN_DIR/wifi.sh"
+  click_script="$POPUP_CLICK_SCRIPT"
+  label.padding_right=15
+  update_freq=60
+)
+
+rm -f /tmp/sketchybar_speed
+rm -f /tmp/sketchybar_wifi
+sketchybar --add item wifi right \
+  --set wifi "${wifi[@]}" \
+  --subscribe wifi system_woke
+
+battery=(
+  script="$PLUGIN_DIR/battery.sh"
+  update_freq=120
+  updates=on
+  click_script="$POPUP_CLICK_SCRIPT"
+  label.padding_left=15
+)
+
+sketchybar --add item battery right \
+  --set battery "${battery[@]}" \
+  --subscribe battery power_source_change system_woke
+
+volume=(
+  script="$PLUGIN_DIR/volume.sh"
+  updates=on
+  label.drawing=off
+  icon.drawing=off
+  slider.highlight_color=$TEXT
+  slider.background.height=5
+  slider.background.corner_radius=3
+  slider.background.color=$GREY
+  slider.padding_left=15
+  slider.padding_right=15
+  label.padding_right=10
+  label.padding_left=10
+  background.color=$L_BROWN
+  background.height=10
+  background.corner_radius=10
+  background.border_width=2
+  background.border_color=$TEXT
+  background.padding_right=7
+)
+
+sketchybar --add slider volume right \
+  --set volume "${volume[@]}" \
+  --subscribe volume volume_change mouse.clicked mouse.entered mouse.exited
+
+volume_icon=(
+  script="$PLUGIN_DIR/volume_icon.sh"
+  click_script="$PLUGIN_DIR/volume_click.sh"
+  label.padding_right=8
+  label.padding_left=20
+)
+
+sketchybar --add item volume_icon right \
+  --set volume_icon "${volume_icon[@]}"
+
+apple=(
+  script="$PLUGIN_DIR/apple.sh"
+  click_script="$POPUP_CLICK_SCRIPT"
+  label=$APPLE
+  label.padding_right=15
+  label.padding_left=15
+  background.color=$M_BROWN
+  background.height=19
+  background.corner_radius=10
+  background.padding_left=3
+  background.padding_right=3
+)
+
+sketchybar --add item apple left \
+  --set apple "${apple[@]}"
+
+
+ram=(
+  icon=$RAM
+  icon.padding_left=5
+  script="$PLUGIN_DIR/ram.sh"
+  label.padding_right=5
+  label.padding_left=5
+  update_freq=60
+  background.corner_radius=10
+  background.color=$L_BROWN
+  background.height=19
+  background.padding_left=3
+  background.padding_right=6
+)
+
+sketchybar --add item ram left \
+  --set ram "${ram[@]}"
+
+cpu=(
+  icon=$CPU
+  icon.padding_left=5
+  script="$PLUGIN_DIR/cpu.sh"
+  label.padding_left=5
+  label.padding_right=10
+  update_freq=60
+)
+
+sketchybar --add item cpu left \
+  --set cpu "${cpu[@]}"
+
+brackets=(
+  background.color=$L_BROWN
+  background.height=25
+  background.corner_radius=10
+  background.border_color=$TEXT
+  background.border_width=3
+  background.padding_left=10
+)
+
+sketchybar --add bracket status time date wifi battery volume_icon right \
+  --set status "${brackets[@]}"
+
+sketchybar --add bracket control apple ram cpu center\
+  --set control "${brackets[@]}"
+
+sketchybar --update
